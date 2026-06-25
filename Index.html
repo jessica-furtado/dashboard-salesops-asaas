@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard SalesOps — Asaas</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <style>
+    /* ── Reset & Base ─────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue-900: #0F1F3D;
+      --blue-700: #162d5e;
+      --blue-500: #2323CC;
+      --blue-300: #4747E0;
+      --blue-100: #E8E8FF;
+      --white:    #FFFFFF;
+      --gray-50:  #F5F7FA;
+      --gray-100: #EEF0F4;
+      --gray-200: #DDE1EA;
+      --gray-400: #9AA3B2;
+      --gray-600: #5A6474;
+      --gray-900: #1E293B;
+      --orange:   #E65C00;
+      --red:      #C0392B;
+      --green:    #1A7F5A;
+      --yellow:   #B45309;
+
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 16px;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
+      --shadow-md: 0 4px 12px rgba(0,0,0,.10);
+      --font: 'Inter', sans-serif;
+    }
+
+    body {
+      font-family: var(--font);
+      background: var(--gray-50);
+      color: var(--gray-900);
+      min-height: 100vh;
+    }
+
+    /* ── Header ───────────────────────────────────────── */
+    .header {
+      background: var(--blue-900);
+      padding: 0 2rem;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 8px rgba(0,0,0,.25);
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-icon {
+      width: 32px;
+      height: 32px;
+      background: var(--blue-500);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+
+    .header h1 {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--white);
+      letter-spacing: -.01em;
+    }
+
+    .header-sub {
+      font-size: 12px;
+      color: var(--gray-400);
+      margin-top: 1px;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .last-update {
+      font-size: 11px;
+      color: var(--gray-400);
+    }
+
+    .btn-refresh {
+      background: var(--blue-500);
+      color: var(--white);
+      border: none;
+      border-radius: var(--radius-sm);
+      padding: 7px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      font-family: var(--font);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: background .15s;
+    }
+    .btn-refresh:hover { background: var(--blue-300); }
+    .btn-refresh:disabled { opacity: .5; cursor: not-allowed; }
+
+    /* ── Tabs ─────────────────────────────────────────── */
+    .tabs-bar {
+      background: var(--white);
+      border-bottom: 1px solid var(--gray-200);
+      padding: 0 2rem;
+      display: flex;
+      gap: 0;
+    }
+
+    .tab-btn {
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      padding: 14px 20px;
+      font-size: 13px;
+      font-weight: 500;
+      font-family: var(--font);
+      color: var(--gray-600);
+      cursor: pointer;
+      transition: all .15s;
+      margin-bottom: -1px;
+    }
+    .tab-btn:hover { color: var(--blue-500); }
+    .tab-btn.active {
+      color: var(--blue-500);
+      border-bottom-color: var(--blue-500);
+      font-weight: 600;
+    }
+
+    /* ── Main content ─────────────────────────────────── */
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 24px 2rem;
+    }
+
+    /* ── Section titles ───────────────────────────────── */
+    .section-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--gray-400);
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      margin-bottom: 14px;
+      margin-top: 28px;
+    }
+    .section-title:first-child { margin-top: 0; }
+
+    /* ── KPI Grid ─────────────────────────────────────── */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 6px;
+    }
+
+    .kpi-card {
+      background: var(--white);
+      border-radius: var(--radius-md);
+      padding: 18px 20px;
+      box-shadow: var(--shadow-sm);
+      border-top: 3px solid var(--blue-500);
+      position: relative;
+      overflow: hidden;
+    }
+    .kpi-card.warn  { border-top-color: var(--orange); }
+    .kpi-card.danger{ border-top-color: var(--red); }
+    .kpi-card.ok    { border-top-color: var(--green); }
+
+    .kpi-label {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--gray-600);
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      margin-bottom: 8px;
+    }
+
+    .kpi-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--gray-900);
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+
+    .kpi-badge {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 20px;
+    }
+    .badge-ok     { background: #D1FAE5; color: #065F46; }
+    .badge-warn   { background: #FEF3C7; color: #92400E; }
+    .badge-danger { background: #FEE2E2; color: #991B1B; }
+    .badge-info   { background: var(--blue-100); color: var(--blue-500); }
+
+    /* ── Charts grid ──────────────────────────────────── */
+    .charts-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .charts-grid-3 {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 16px;
+    }
+
+    .chart-card {
+      background: var(--white);
+      border-radius: var(--radius-md);
+      padding: 20px 24px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .chart-card.full { grid-column: 1 / -1; }
+
+    .chart-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .chart-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--gray-900);
+    }
+
+    .chart-subtitle {
+      font-size: 11px;
+      color: var(--gray-400);
+      margin-top: 2px;
+    }
+
+    .chart-insight {
+      font-size: 11px;
+      background: var(--gray-50);
+      border-left: 3px solid var(--blue-500);
+      padding: 6px 10px;
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      color: var(--gray-600);
+      margin-top: 14px;
+      line-height: 1.5;
+    }
+    .chart-insight.warn { border-left-color: var(--orange); }
+    .chart-insight.danger { border-left-color: var(--red); }
+
+    .chart-wrap {
+      position: relative;
+      height: 220px;
+    }
+    .chart-wrap.tall { height: 280px; }
+
+    /* ── Skeleton loading ─────────────────────────────── */
+    .skeleton {
+      background: linear-gradient(90deg, var(--gray-100) 25%, var(--gray-200) 50%, var(--gray-100) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+      border-radius: var(--radius-sm);
+    }
+    @keyframes shimmer {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    .skeleton-kpi {
+      height: 90px;
+      border-radius: var(--radius-md);
+    }
+
+    .skeleton-chart {
+      height: 260px;
+      border-radius: var(--radius-md);
+    }
+
+    /* ── Funnel visual ────────────────────────────────── */
+    .funnel-container {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding: 8px 0;
+    }
+
+    .funnel-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .funnel-label {
+      font-size: 11px;
+      color: var(--gray-600);
+      width: 160px;
+      flex-shrink: 0;
+      text-align: right;
+    }
+
+    .funnel-bar-wrap {
+      flex: 1;
+      height: 28px;
+      background: var(--gray-100);
+      border-radius: 4px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .funnel-bar {
+      height: 100%;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      padding-left: 10px;
+      transition: width .6s ease;
+    }
+
+    .funnel-pct {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--white);
+      white-space: nowrap;
+    }
+
+    .funnel-abs {
+      font-size: 11px;
+      color: var(--gray-600);
+      width: 80px;
+      flex-shrink: 0;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* ── Tabela de dados ──────────────────────────────── */
+    .table-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .search-input {
+      flex: 1;
+      max-width: 320px;
+      padding: 8px 12px;
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-family: var(--font);
+      color: var(--gray-900);
+      background: var(--white);
+      outline: none;
+    }
+    .search-input:focus { border-color: var(--blue-500); }
+
+    .table-info {
+      font-size: 12px;
+      color: var(--gray-400);
+      margin-left: auto;
+    }
+
+    .table-wrap {
+      background: var(--white);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .data-table thead th {
+      background: var(--blue-900);
+      color: var(--white);
+      padding: 10px 14px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 11px;
+      white-space: nowrap;
+      cursor: pointer;
+      user-select: none;
+    }
+    .data-table thead th:hover { background: var(--blue-700); }
+
+    .data-table tbody tr:nth-child(even) { background: var(--gray-50); }
+    .data-table tbody tr:hover { background: var(--blue-100); }
+
+    .data-table tbody td {
+      padding: 9px 14px;
+      color: var(--gray-900);
+      border-bottom: 1px solid var(--gray-100);
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    .td-pct {
+      font-weight: 600;
+      font-size: 11px;
+      padding: 2px 7px;
+      border-radius: 4px;
+      display: inline-block;
+    }
+    .pct-ok     { background: #D1FAE5; color: #065F46; }
+    .pct-warn   { background: #FEF3C7; color: #92400E; }
+    .pct-danger { background: #FEE2E2; color: #991B1B; }
+
+    /* ── Empty state ──────────────────────────────────── */
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--gray-400);
+    }
+    .empty-state .empty-icon { font-size: 32px; margin-bottom: 12px; }
+    .empty-state p { font-size: 13px; }
+
+    /* ── Error banner ─────────────────────────────────── */
+    .error-banner {
+      background: #FEE2E2;
+      border: 1px solid #FCA5A5;
+      border-radius: var(--radius-md);
+      padding: 16px 20px;
+      color: #991B1B;
+      font-size: 13px;
+      display: none;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    /* ── Responsive ───────────────────────────────────── */
+    @media (max-width: 1024px) {
+      .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+      .charts-grid-2, .charts-grid-3 { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 640px) {
+      .kpi-grid { grid-template-columns: 1fr 1fr; }
+      .container { padding: 16px 1rem; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ── Header ─────────────────────────────────────── -->
+  <header class="header">
+    <div class="header-left">
+      <div class="logo-icon">🦋</div>
+      <div>
+        <div class="header h1" style="font-size:15px;font-weight:600;color:#fff;">Dashboard SalesOps · Asaas</div>
+        <div class="header-sub">Funil Inbound — Pré-vendas e Vendas</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <span class="last-update" id="lastUpdate">Carregando...</span>
+      <button class="btn-refresh" id="btnRefresh" onclick="carregarDados()">
+        🔄 Atualizar Dados
+      </button>
+    </div>
+  </header>
+
+  <!-- ── Tabs ───────────────────────────────────────── -->
+  <div class="tabs-bar">
+    <button class="tab-btn active" onclick="showTab('analise', this)">📊 Análise</button>
+    <button class="tab-btn" onclick="showTab('tabela', this)">📋 Dados Detalhados</button>
+  </div>
+
+  <!-- ── Error banner ───────────────────────────────── -->
+  <div class="container">
+    <div class="error-banner" id="errorBanner">
+      ⚠️ <span id="errorMsg"></span>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════
+       TAB 1 — ANÁLISE
+  ════════════════════════════════════════════════════ -->
+  <div id="tab-analise" class="tab-panel active">
+    <div class="container">
+
+      <!-- KPIs principais -->
+      <div class="section-title">Visão Geral do Funil · Médias Acumuladas</div>
+      <div class="kpi-grid" id="kpiGrid">
+        <div class="skeleton skeleton-kpi"></div>
+        <div class="skeleton skeleton-kpi"></div>
+        <div class="skeleton skeleton-kpi"></div>
+        <div class="skeleton skeleton-kpi"></div>
+        <div class="skeleton skeleton-kpi"></div>
+        <div class="skeleton skeleton-kpi"></div>
+        <div class="skeleton skeleton-kpi"></div>
+        <div class="skeleton skeleton-kpi"></div>
+      </div>
+
+      <!-- Gráfico 1: Tendência trimestral + Funil -->
+      <div class="section-title">Evolução Trimestral</div>
+      <div class="charts-grid-3">
+        <div class="chart-card">
+          <div class="chart-header">
+            <div>
+              <div class="chart-title">Reuniões cresceram. Clientes reais, não.</div>
+              <div class="chart-subtitle">Volume semanal médio por trimestre</div>
+            </div>
+          </div>
+          <div class="chart-wrap tall">
+            <div class="skeleton" id="sk-chart1" style="width:100%;height:100%;border-radius:6px"></div>
+            <canvas id="chartVolume" style="display:none"></canvas>
+          </div>
+          <div class="chart-insight danger">
+            📉 Volume de leads cresceu +53% mas clientes em produção ficaram estagnados — o gargalo está depois da reunião.
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-header">
+            <div>
+              <div class="chart-title">Queda crítica pós-aprovação</div>
+              <div class="chart-subtitle">Tx Produção / Proposta Aprovada</div>
+            </div>
+          </div>
+          <div class="chart-wrap tall">
+            <div class="skeleton" id="sk-chart2" style="width:100%;height:100%;border-radius:6px"></div>
+            <canvas id="chartProducao" style="display:none"></canvas>
+          </div>
+          <div class="chart-insight danger">
+            🔴 Queda de 42pp em 6 trimestres: de 93% → 51%. Gatilho permissivo infla conversão artificial.
+          </div>
+        </div>
+      </div>
+
+      <!-- Gráfico 2: Taxas chave + No-show -->
+      <div class="section-title" style="margin-top:20px">Taxas de Conversão</div>
+      <div class="charts-grid-2">
+        <div class="chart-card">
+          <div class="chart-header">
+            <div>
+              <div class="chart-title">Taxas chave por trimestre</div>
+              <div class="chart-subtitle">Reunião/Contato · Produção/Aprov · Ponta a Ponta</div>
+            </div>
+          </div>
+          <div class="chart-wrap">
+            <div class="skeleton" id="sk-chart3" style="width:100%;height:100%;border-radius:6px"></div>
+            <canvas id="chartTaxas" style="display:none"></canvas>
+          </div>
+          <div class="chart-insight warn">
+            ⚠️ Tx Reunião/Contato estável (~21%) mas Produção/Aprov em queda contínua — o SDR não é o problema.
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-header">
+            <div>
+              <div class="chart-title">No-show por trimestre</div>
+              <div class="chart-subtitle">% de reuniões não realizadas após agendamento</div>
+            </div>
+          </div>
+          <div class="chart-wrap">
+            <div class="skeleton" id="sk-chart4" style="width:100%;height:100%;border-radius:6px"></div>
+            <canvas id="chartNoshow" style="display:none"></canvas>
+          </div>
+          <div class="chart-insight warn">
+            ⚠️ Taxa de no-show variou de 6% a 19% com alta variância — indica critério inconsistente de registro entre PS e Vendas.
+          </div>
+        </div>
+      </div>
+
+      <!-- Funil visual -->
+      <div class="section-title" style="margin-top:20px">Funil Acumulado — Ponta a Ponta</div>
+      <div class="chart-card full">
+        <div class="chart-header">
+          <div>
+            <div class="chart-title">Conversão em cada etapa · Total acumulado</div>
+            <div class="chart-subtitle">Barras proporcionais ao volume relativo ao total de leads recebidos</div>
+          </div>
+        </div>
+        <div class="funnel-container" id="funnelContainer">
+          <div class="skeleton" style="height:240px;border-radius:6px"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════
+       TAB 2 — DADOS DETALHADOS
+  ════════════════════════════════════════════════════ -->
+  <div id="tab-tabela" class="tab-panel">
+    <div class="container">
+      <div class="section-title">Dados Semanais com Taxas Calculadas</div>
+      <div class="table-controls">
+        <input class="search-input" type="text" id="searchInput"
+               placeholder="🔍 Filtrar por safra ou trimestre..." oninput="filtrarTabela()" />
+        <span class="table-info" id="tableInfo"></span>
+      </div>
+      <div class="table-wrap">
+        <div id="tableContainer">
+          <div class="skeleton" style="height:400px;border-radius:0"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <script>
+    // ═══════════════════════════════════════════════════
+    // ESTADO GLOBAL
+    // ═══════════════════════════════════════════════════
+    let dadosGlobais = [];
+    let dadosFiltrados = [];
+    let chartVolume, chartProducao, chartTaxas, chartNoshow;
+
+    // ═══════════════════════════════════════════════════
+    // TABS
+    // ═══════════════════════════════════════════════════
+    function showTab(id, btn) {
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('tab-' + id).classList.add('active');
+      btn.classList.add('active');
+    }
+
+    // ═══════════════════════════════════════════════════
+    // CARREGAMENTO DE DADOS via google.script.run
+    // ═══════════════════════════════════════════════════
+    function carregarDados() {
+      const btn = document.getElementById('btnRefresh');
+      btn.disabled = true;
+      btn.textContent = '⏳ Carregando...';
+      document.getElementById('errorBanner').style.display = 'none';
+
+      // Chama o backend Apps Script
+      google.script.run
+        .withSuccessHandler(onDadosCarregados)
+        .withFailureHandler(onErro)
+        .getDadosBrutos();
+    }
+
+    // Callback de sucesso
+    function onDadosCarregados(rows) {
+      const btn = document.getElementById('btnRefresh');
+      btn.disabled = false;
+      btn.textContent = '🔄 Atualizar Dados';
+
+      if (!rows || rows.length === 0) {
+        mostrarErro('Nenhum dado encontrado na aba Dados Brutos.');
+        return;
+      }
+
+      // Normaliza e enriquece
+      dadosGlobais = rows
+        .filter(r => r.safra_semana && r.total_enviado_ao_time_da_safra > 0)
+        .map(enriquecerLinha)
+        .sort((a, b) => a.safra.localeCompare(b.safra));
+
+      dadosFiltrados = [...dadosGlobais];
+
+      const agora = new Date();
+      document.getElementById('lastUpdate').textContent =
+        'Atualizado às ' + agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+      renderizarTudo();
+    }
+
+    // Callback de erro
+    function onErro(err) {
+      const btn = document.getElementById('btnRefresh');
+      btn.disabled = false;
+      btn.textContent = '🔄 Atualizar Dados';
+      mostrarErro('Erro ao carregar dados: ' + (err.message || err));
+    }
+
+    function mostrarErro(msg) {
+      const el = document.getElementById('errorBanner');
+      document.getElementById('errorMsg').textContent = msg;
+      el.style.display = 'flex';
+    }
+
+    // ═══════════════════════════════════════════════════
+    // ENRIQUECIMENTO — calcula taxas por linha
+    // ═══════════════════════════════════════════════════
+    function enriquecerLinha(r) {
+      // Normaliza chaves (o Apps Script já retorna chaves normalizadas)
+      const safra    = r.safra_semana || r.safra || '';
+      const total    = num(r.total_enviado_ao_time_da_safra || r.total);
+      const tent     = num(r.tentativa_de_contato || r.tentativa_de_contato_ps);
+      const contato  = num(r.contato_realizado || r.contato_realizado_ps);
+      const reunPS   = num(r.reunio_agendada || r.reuniao_agendada_ps || r.reunio_agendada_ps);
+      const noshow   = num(r.noshow || r.noshow_ps);
+      const perdPS   = num(r.negcio_perdido || r.negocio_perdido_ps);
+      const reunV    = num(r.reunio_agendada_vendas || r.reuniao_agendada_vendas);
+      const reunReal = num(r.reunio_realizada || r.reuniao_realizada_vendas || r.reunio_realizada_vendas);
+      const propEnv  = num(r.proposta_enviada);
+      const propAprov= num(r.proposta_aprovada);
+      const agGat    = num(r.aguardando_gatilho);
+      const emProd   = num(r.em_produo || r.em_producao);
+      const perdV    = num(r.negcio_perdido_vendas || r.negocio_perdido_vendas);
+
+      // Detectar trimestre a partir da data
+      const dt = new Date(safra);
+      const tri = isNaN(dt) ? '' : `${dt.getFullYear()}Q${Math.ceil((dt.getMonth()+1)/3)}`;
+
+      return {
+        safra, tri, total, tent, contato, reunPS, noshow, perdPS,
+        reunV, reunReal, propEnv, propAprov, agGat, emProd, perdV,
+        tx_cobertura: pct(tent, total),
+        tx_contato:   pct(contato, tent),
+        tx_reuniao:   pct(reunPS, contato),
+        tx_noshow:    pct(noshow, reunPS),
+        tx_realizada: pct(reunReal, reunV),
+        tx_propAprov: pct(propAprov, propEnv),
+        tx_producao:  pct(emProd, propAprov),
+        tx_ponta:     pct(emProd, total),
+      };
+    }
+
+    function num(v) { return (v === null || v === undefined || v === '') ? 0 : Number(v) || 0; }
+    function pct(a, b) { return b > 0 ? a / b : null; }
+
+    // ═══════════════════════════════════════════════════
+    // AGREGAÇÃO TRIMESTRAL
+    // ═══════════════════════════════════════════════════
+    function agruparTrimestral(dados) {
+      const map = {};
+      dados.forEach(r => {
+        if (!r.tri) return;
+        if (!map[r.tri]) map[r.tri] = {
+          tri: r.tri, total:0, tent:0, contato:0, reunPS:0, noshow:0,
+          reunV:0, reunReal:0, propEnv:0, propAprov:0, agGat:0, emProd:0, semanas:0
+        };
+        const g = map[r.tri];
+        ['total','tent','contato','reunPS','noshow','reunV','reunReal','propEnv','propAprov','agGat','emProd'].forEach(k => g[k] += r[k]);
+        g.semanas++;
+      });
+
+      return Object.values(map)
+        .sort((a,b) => a.tri.localeCompare(b.tri))
+        .map(g => ({
+          ...g,
+          tx_reuniao:  pct(g.reunPS, g.contato),
+          tx_noshow:   pct(g.noshow, g.reunPS),
+          tx_producao: pct(g.emProd, g.propAprov),
+          tx_ponta:    pct(g.emProd, g.total),
+          avg_reunioes_sem: g.reunPS / g.semanas,
+          avg_producao_sem: g.emProd / g.semanas,
+          avg_leads_sem:    g.total  / g.semanas,
+        }));
+    }
+
+    // ═══════════════════════════════════════════════════
+    // RENDERIZAÇÃO GERAL
+    // ═══════════════════════════════════════════════════
+    function renderizarTudo() {
+      renderKPIs();
+      const trim = agruparTrimestral(dadosGlobais);
+      renderChartVolume(trim);
+      renderChartProducao(trim);
+      renderChartTaxas(trim);
+      renderChartNoshow(trim);
+      renderFunil();
+      renderTabela();
+    }
+
+    // ═══════════════════════════════════════════════════
+    // KPIs
+    // ═══════════════════════════════════════════════════
+    function renderKPIs() {
+      const d = dadosGlobais;
+      const soma = k => d.reduce((s,r) => s + r[k], 0);
+
+      const total    = soma('total');
+      const tent     = soma('tent');
+      const contato  = soma('contato');
+      const reunPS   = soma('reunPS');
+      const noshow   = soma('noshow');
+      const reunV    = soma('reunV');
+      const reunReal = soma('reunReal');
+      const propEnv  = soma('propEnv');
+      const propAprov= soma('propAprov');
+      const emProd   = soma('emProd');
+
+      const kpis = [
+        { label:'Cobertura', val: fmtPct(tent/total), badge:'ok', hint:'Tentativa / Total' },
+        { label:'Contato Realizado', val: fmtPct(contato/tent), badge:'ok', hint:'Contato / Tentativa' },
+        { label:'Reunião / Contato', val: fmtPct(reunPS/contato), badge:'warn', hint:'PS · meta >25%' },
+        { label:'No-show PS', val: fmtPct(noshow/reunPS), badge:'warn', hint:'Noshow / Reunião agend.' },
+        { label:'Reunião Realizada', val: fmtPct(reunReal/reunV), badge:'ok', hint:'Vendas · realizada/agend.' },
+        { label:'Prop. Aprovada', val: fmtPct(propAprov/propEnv), badge:'warn', hint:'Aprovada / Enviada' },
+        { label:'Produção / Aprov.', val: fmtPct(emProd/propAprov), badge:'danger', hint:'🔴 Em queda contínua' },
+        { label:'Ponta a Ponta', val: fmtPct(emProd/total), badge:'danger', hint:'Lead → Em produção' },
+      ];
+
+      const grid = document.getElementById('kpiGrid');
+      grid.innerHTML = kpis.map(k => `
+        <div class="kpi-card ${k.badge}">
+          <div class="kpi-label">${k.label}</div>
+          <div class="kpi-value">${k.val}</div>
+          <span class="kpi-badge badge-${k.badge}">${k.hint}</span>
+        </div>
+      `).join('');
+    }
+
+    // ═══════════════════════════════════════════════════
+    // GRÁFICO 1 — Volume semanal médio (leads vs produção)
+    // ═══════════════════════════════════════════════════
+    function renderChartVolume(trim) {
+      document.getElementById('sk-chart1').style.display = 'none';
+      const canvas = document.getElementById('chartVolume');
+      canvas.style.display = 'block';
+
+      if (chartVolume) chartVolume.destroy();
+
+      const labels = trim.map(t => t.tri);
+      chartVolume = new Chart(canvas, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: 'Leads / semana',
+              data: trim.map(t => Math.round(t.avg_leads_sem)),
+              backgroundColor: 'rgba(35,35,204,0.15)',
+              borderColor: '#2323CC',
+              borderWidth: 2,
+              borderRadius: 4,
+              yAxisID: 'y',
+            },
+            {
+              label: 'Reuniões / semana',
+              data: trim.map(t => Math.round(t.avg_reunioes_sem)),
+              backgroundColor: 'rgba(35,35,204,0.55)',
+              borderColor: '#2323CC',
+              borderWidth: 2,
+              borderRadius: 4,
+              yAxisID: 'y',
+            },
+            {
+              label: 'Em produção / semana',
+              data: trim.map(t => Math.round(t.avg_producao_sem)),
+              backgroundColor: '#C0392B',
+              borderColor: '#C0392B',
+              borderWidth: 2,
+              borderRadius: 4,
+              type: 'line',
+              yAxisID: 'y',
+              tension: 0.3,
+              pointRadius: 5,
+              pointBackgroundColor: '#C0392B',
+            }
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom', labels: { font: { family: 'Inter', size: 11 }, boxWidth: 12 } },
+            tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${fmtNum(ctx.raw)}` } }
+          },
+          scales: {
+            y: { ticks: { font: { family: 'Inter', size: 10 }, callback: v => fmtNum(v) }, grid: { color: '#EEF0F4' } },
+            x: { ticks: { font: { family: 'Inter', size: 10 } }, grid: { display: false } }
+          }
+        }
+      });
+    }
+
+    // ═══════════════════════════════════════════════════
+    // GRÁFICO 2 — Queda Tx Produção/Aprov trimestral
+    // ═══════════════════════════════════════════════════
+    function renderChartProducao(trim) {
+      document.getElementById('sk-chart2').style.display = 'none';
+      const canvas = document.getElementById('chartProducao');
+      canvas.style.display = 'block';
+
+      if (chartProducao) chartProducao.destroy();
+
+      chartProducao = new Chart(canvas, {
+        type: 'line',
+        data: {
+          labels: trim.map(t => t.tri),
+          datasets: [{
+            label: 'Produção / Prop. Aprovada',
+            data: trim.map(t => t.tx_producao),
+            borderColor: '#C0392B',
+            backgroundColor: 'rgba(192,57,43,0.08)',
+            fill: true,
+            tension: 0.3,
+            pointRadius: 5,
+            pointBackgroundColor: '#C0392B',
+            borderWidth: 2.5,
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: ctx => ` ${fmtPct(ctx.raw)}` } },
+            annotation: {
+              annotations: {
+                alerta: {
+                  type: 'line', yMin: 0.70, yMax: 0.70,
+                  borderColor: '#E65C00', borderWidth: 1.5,
+                  borderDash: [6,4],
+                  label: { content: 'Zona de alerta (70%)', enabled: true, position: 'end', font: { size: 10 } }
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              min: 0.4, max: 1.0,
+              ticks: { font: { family:'Inter', size:10 }, callback: v => fmtPct(v) },
+              grid: { color: '#EEF0F4' }
+            },
+            x: { ticks: { font: { family:'Inter', size:10 } }, grid: { display: false } }
+          }
+        }
+      });
+    }
+
+    // ═══════════════════════════════════════════════════
+    // GRÁFICO 3 — Taxas chave (linha, 3 séries)
+    // ═══════════════════════════════════════════════════
+    function renderChartTaxas(trim) {
+      document.getElementById('sk-chart3').style.display = 'none';
+      const canvas = document.getElementById('chartTaxas');
+      canvas.style.display = 'block';
+
+      if (chartTaxas) chartTaxas.destroy();
+
+      chartTaxas = new Chart(canvas, {
+        type: 'line',
+        data: {
+          labels: trim.map(t => t.tri),
+          datasets: [
+            {
+              label: 'Reunião/Contato',
+              data: trim.map(t => t.tx_reuniao),
+              borderColor: '#E65C00', backgroundColor: 'transparent',
+              tension: 0.3, pointRadius: 4, borderWidth: 2,
+            },
+            {
+              label: 'Produção/Aprov.',
+              data: trim.map(t => t.tx_producao),
+              borderColor: '#C0392B', backgroundColor: 'transparent',
+              tension: 0.3, pointRadius: 4, borderWidth: 2,
+            },
+            {
+              label: 'Ponta a Ponta',
+              data: trim.map(t => t.tx_ponta),
+              borderColor: '#2323CC', backgroundColor: 'transparent',
+              tension: 0.3, pointRadius: 4, borderWidth: 2,
+            }
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: {
+            legend: { position:'bottom', labels: { font:{ family:'Inter', size:11 }, boxWidth:12 } },
+            tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${fmtPct(ctx.raw)}` } }
+          },
+          scales: {
+            y: { ticks: { font:{family:'Inter',size:10}, callback: v => fmtPct(v) }, grid: { color:'#EEF0F4' } },
+            x: { ticks: { font:{family:'Inter',size:10} }, grid: { display: false } }
+          }
+        }
+      });
+    }
+
+    // ═══════════════════════════════════════════════════
+    // GRÁFICO 4 — No-show por trimestre
+    // ═══════════════════════════════════════════════════
+    function renderChartNoshow(trim) {
+      document.getElementById('sk-chart4').style.display = 'none';
+      const canvas = document.getElementById('chartNoshow');
+      canvas.style.display = 'block';
+
+      if (chartNoshow) chartNoshow.destroy();
+
+      chartNoshow = new Chart(canvas, {
+        type: 'bar',
+        data: {
+          labels: trim.map(t => t.tri),
+          datasets: [{
+            label: 'Tx No-show',
+            data: trim.map(t => t.tx_noshow),
+            backgroundColor: trim.map(t =>
+              t.tx_noshow > 0.20 ? '#C0392B' :
+              t.tx_noshow > 0.15 ? '#E65C00' : '#2323CC'
+            ),
+            borderRadius: 4,
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: ctx => ` No-show: ${fmtPct(ctx.raw)}` } }
+          },
+          scales: {
+            y: { ticks: { font:{family:'Inter',size:10}, callback: v => fmtPct(v) }, grid: { color:'#EEF0F4' } },
+            x: { ticks: { font:{family:'Inter',size:10} }, grid: { display: false } }
+          }
+        }
+      });
+    }
+
+    // ═══════════════════════════════════════════════════
+    // FUNIL VISUAL
+    // ═══════════════════════════════════════════════════
+    function renderFunil() {
+      const d = dadosGlobais;
+      const soma = k => d.reduce((s,r) => s + r[k], 0);
+
+      const total    = soma('total');
+      const tent     = soma('tent');
+      const contato  = soma('contato');
+      const reunPS   = soma('reunPS');
+      const reunReal = soma('reunReal');
+      const propEnv  = soma('propEnv');
+      const propAprov= soma('propAprov');
+      const emProd   = soma('emProd');
+
+      const etapas = [
+        { label: 'Total recebido',      val: total,    cor: '#0F1F3D' },
+        { label: 'Tentativa contato',   val: tent,     cor: '#162d5e' },
+        { label: 'Contato realizado',   val: contato,  cor: '#2323CC' },
+        { label: 'Reunião agendada',    val: reunPS,   cor: '#E65C00' },
+        { label: 'Reunião realizada',   val: reunReal, cor: '#4747E0' },
+        { label: 'Proposta enviada',    val: propEnv,  cor: '#2323CC' },
+        { label: 'Proposta aprovada',   val: propAprov,cor: '#E65C00' },
+        { label: 'Em produção',         val: emProd,   cor: '#C0392B' },
+      ];
+
+      const container = document.getElementById('funnelContainer');
+      container.innerHTML = etapas.map(e => {
+        const largura = Math.max(4, Math.round(e.val / total * 100));
+        const pctStr  = fmtPct(e.val / total);
+        return `
+          <div class="funnel-row">
+            <div class="funnel-label">${e.label}</div>
+            <div class="funnel-bar-wrap">
+              <div class="funnel-bar" style="width:${largura}%;background:${e.cor}">
+                <span class="funnel-pct">${pctStr}</span>
+              </div>
+            </div>
+            <div class="funnel-abs">${fmtNum(e.val)}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ═══════════════════════════════════════════════════
+    // TABELA DE DADOS
+    // ═══════════════════════════════════════════════════
+    function renderTabela() {
+      dadosFiltrados = [...dadosGlobais];
+      atualizarTabela();
+    }
+
+    function filtrarTabela() {
+      const q = document.getElementById('searchInput').value.toLowerCase();
+      dadosFiltrados = dadosGlobais.filter(r =>
+        r.safra.toLowerCase().includes(q) || r.tri.toLowerCase().includes(q)
+      );
+      atualizarTabela();
+    }
+
+    function atualizarTabela() {
+      document.getElementById('tableInfo').textContent =
+        `${dadosFiltrados.length} de ${dadosGlobais.length} semanas`;
+
+      if (dadosFiltrados.length === 0) {
+        document.getElementById('tableContainer').innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">🔍</div>
+            <p>Sem dados para o filtro aplicado.</p>
+          </div>`;
+        return;
+      }
+
+      const cols = [
+        { key:'safra',     label:'Safra',        fmt: v => v },
+        { key:'tri',       label:'Trimestre',    fmt: v => v },
+        { key:'total',     label:'Total',        fmt: fmtNum },
+        { key:'tent',      label:'Tentativa',    fmt: fmtNum },
+        { key:'contato',   label:'Contato',      fmt: fmtNum },
+        { key:'reunPS',    label:'Reun. PS',     fmt: fmtNum },
+        { key:'noshow',    label:'No-show',      fmt: fmtNum },
+        { key:'reunReal',  label:'Reun. Real.',  fmt: fmtNum },
+        { key:'propAprov', label:'Prop. Aprov.', fmt: fmtNum },
+        { key:'emProd',    label:'Em Prod.',     fmt: fmtNum },
+        { key:'tx_reuniao',  label:'Tx Reunião',  fmt: v => pctBadge(v, 0.25, 0.15) },
+        { key:'tx_noshow',   label:'Tx No-show',  fmt: v => pctBadge(v, 0.15, 0.20, true) },
+        { key:'tx_producao', label:'Tx Produção', fmt: v => pctBadge(v, 0.80, 0.60) },
+        { key:'tx_ponta',    label:'Tx Ponta',    fmt: v => pctBadge(v, 0.05, 0.03) },
+      ];
+
+      const thead = `<thead><tr>${cols.map(c =>
+        `<th onclick="sortTable('${c.key}')">${c.label} ↕</th>`
+      ).join('')}</tr></thead>`;
+
+      const tbody = `<tbody>${dadosFiltrados.map(r =>
+        `<tr>${cols.map(c => `<td>${c.fmt(r[c.key])}</td>`).join('')}</tr>`
+      ).join('')}</tbody>`;
+
+      document.getElementById('tableContainer').innerHTML =
+        `<div style="overflow-x:auto"><table class="data-table">${thead}${tbody}</table></div>`;
+    }
+
+    // Pct badge colorido
+    function pctBadge(v, limOk, limWarn, inverso=false) {
+      if (v === null || v === undefined) return '—';
+      let cls;
+      if (!inverso) {
+        cls = v >= limOk ? 'pct-ok' : v >= limWarn ? 'pct-warn' : 'pct-danger';
+      } else {
+        cls = v <= limOk ? 'pct-ok' : v <= limWarn ? 'pct-warn' : 'pct-danger';
+      }
+      return `<span class="td-pct ${cls}">${fmtPct(v)}</span>`;
+    }
+
+    // Sort simples
+    let sortKey = '', sortAsc = true;
+    function sortTable(key) {
+      if (sortKey === key) sortAsc = !sortAsc;
+      else { sortKey = key; sortAsc = false; }
+      dadosFiltrados.sort((a, b) => {
+        const va = a[key] ?? 0, vb = b[key] ?? 0;
+        return sortAsc ? va - vb : vb - va;
+      });
+      atualizarTabela();
+    }
+
+    // ═══════════════════════════════════════════════════
+    // FORMATADORES pt-BR
+    // ═══════════════════════════════════════════════════
+    function fmtPct(v) {
+      if (v === null || v === undefined || isNaN(v)) return '—';
+      return (v * 100).toLocaleString('pt-BR', { minimumFractionDigits:1, maximumFractionDigits:1 }) + '%';
+    }
+
+    function fmtNum(v) {
+      if (v === null || v === undefined) return '—';
+      return Number(v).toLocaleString('pt-BR');
+    }
+
+    // ═══════════════════════════════════════════════════
+    // INICIALIZAÇÃO
+    // ═══════════════════════════════════════════════════
+    window.onload = function() {
+      carregarDados();
+    };
+  </script>
+</body>
+</html>
