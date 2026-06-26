@@ -246,10 +246,11 @@ function renderVol(t){
     {label:'Leads/trimestre',data:t.map(x=>x.total),backgroundColor:'rgba(35,35,204,.15)',borderColor:'#2323CC',borderWidth:2,borderRadius:4,
      datalabels:{anchor:'end',align:'end',color:'#2323CC',font:{family:'Inter',size:10,weight:'600'},formatter:v=>fn(v)}},
     {label:'Reuniões/trimestre',data:t.map(x=>x.rps),backgroundColor:'rgba(35,35,204,.55)',borderColor:'#2323CC',borderWidth:2,borderRadius:4,
-     datalabels:{display:false}},
+     datalabels:{anchor:'end',align:'start',color:'#fff',font:{family:'Inter',size:10,weight:'600'},formatter:v=>fn(v)}},
     {label:'Em produção/trimestre',data:t.map(x=>x.ep),type:'line',borderColor:'#C0392B',backgroundColor:'rgba(192,57,43,.1)',fill:true,tension:.3,pointRadius:5,pointBackgroundColor:'#C0392B',borderWidth:2.5,
      datalabels:{anchor:'top',align:'top',color:'#C0392B',font:{family:'Inter',size:10,weight:'600'},formatter:v=>fn(v)}}
   ]},options:{...BC,plugins:{...BC.plugins,datalabels:{}},
+    layout:{padding:{top:24}},
     scales:{y:{ticks:{font:{family:'Inter',size:10},callback:v=>fn(v)},grid:{color:'#EEF0F4'}},x:{ticks:{font:{family:'Inter',size:10}},grid:{display:false}}}}});
 }
 
@@ -268,9 +269,9 @@ function renderTax(t){
     {label:'Produção/Aprov.',data:t.map(x=>x.tx_prod),borderColor:'#C0392B',backgroundColor:'transparent',tension:.3,pointRadius:4,borderWidth:2,
      datalabels:{anchor:'bottom',align:'bottom',color:'#C0392B',font:{family:'Inter',size:10,weight:'600'},formatter:v=>fp(v)}},
     {label:'Ponta a Ponta',  data:t.map(x=>x.tx_pont),borderColor:'#2323CC',backgroundColor:'transparent',tension:.3,pointRadius:4,borderWidth:2,
-     datalabels:{anchor:'top',align:'top',color:'#2323CC',font:{family:'Inter',size:9,weight:'600'},formatter:v=>fp(v),
-       offset:14}}
+     datalabels:{anchor:'bottom',align:'bottom',color:'#2323CC',font:{family:'Inter',size:9,weight:'600'},formatter:v=>fp(v),offset:6}}
   ]},options:{...BC,plugins:{...BC.plugins,datalabels:{}},
+    layout:{padding:{top:24,bottom:24}},
     scales:{y:{ticks:{font:{family:'Inter',size:10},callback:v=>fp(v)},grid:{color:'#EEF0F4'}},x:{ticks:{font:{family:'Inter',size:10}},grid:{display:false}}}}});
 }
 
