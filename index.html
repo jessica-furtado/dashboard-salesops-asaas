@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Dashboard SalesOps — Asaas</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --b9:#0F1F3D;--b7:#162d5e;--b5:#2323CC;--b3:#4747E0;--b1:#E8E8FF;
+      --w:#FFF;--g5:#F5F7FA;--g1:#EEF0F4;--g2:#DDE1EA;--g4:#9AA3B2;--g6:#5A6474;--g9:#1E293B;
+      --or:#E65C00;--re:#C0392B;--gr:#1A7F5A;
+      --rsm:6px;--rmd:10px;--sh:0 1px 3px rgba(0,0,0,.08);--font:'Inter',sans-serif
+    }
+    body{font-family:var(--font);background:var(--g5);color:var(--g9);min-height:100vh}
+    .header{background:var(--b9);padding:0 2rem;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+    .hl{display:flex;align-items:center;gap:12px}
+    .logo{width:34px;height:34px;background:var(--b5);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px}
+    .ht{font-size:15px;font-weight:600;color:var(--w)}
+    .hs{font-size:11px;color:var(--g4);margin-top:1px}
+    .hr{display:flex;align-items:center;gap:14px}
+    .lu{font-size:11px;color:var(--g4)}
+    .btn{background:var(--b5);color:var(--w);border:none;border-radius:var(--rsm);padding:7px 14px;font-size:12px;font-weight:600;font-family:var(--font);cursor:pointer;transition:background .15s}
+    .btn:hover{background:var(--b3)}
+    .tabs{background:var(--w);border-bottom:1px solid var(--g2);padding:0 2rem;display:flex}
+    .tab{background:none;border:none;border-bottom:2px solid transparent;padding:14px 20px;font-size:13px;font-weight:500;font-family:var(--font);color:var(--g6);cursor:pointer;transition:all .15s;margin-bottom:-1px}
+    .tab:hover{color:var(--b5)}
+    .tab.active{color:var(--b5);border-bottom-color:var(--b5);font-weight:600}
+    .panel{display:none}.panel.active{display:block}
+    .wrap{max-width:1400px;margin:0 auto;padding:24px 2rem}
+    .stitle{font-size:11px;font-weight:600;color:var(--g4);text-transform:uppercase;letter-spacing:.07em;margin-bottom:14px;margin-top:28px}
+    .stitle:first-child{margin-top:0}
+    .kgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+    .kcard{background:var(--w);border-radius:var(--rmd);padding:18px 20px;box-shadow:var(--sh);border-top:3px solid var(--b5)}
+    .kcard.warn{border-top-color:var(--or)}.kcard.danger{border-top-color:var(--re)}.kcard.ok{border-top-color:var(--gr)}
+    .klabel{font-size:11px;font-weight:500;color:var(--g6);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+    .kval{font-size:28px;font-weight:700;color:var(--g9);line-height:1;margin-bottom:6px}
+    .kbadge{display:inline-block;font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px}
+    .bok{background:#D1FAE5;color:#065F46}.bwarn{background:#FEF3C7;color:#92400E}.bdanger{background:#FEE2E2;color:#991B1B}
+    .g2col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    .g3col{display:grid;grid-template-columns:2fr 1fr;gap:16px}
+    .ccard{background:var(--w);border-radius:var(--rmd);padding:20px 24px;box-shadow:var(--sh)}
+    .ctitle{font-size:13px;font-weight:600;color:var(--g9)}
+    .csub{font-size:11px;color:var(--g4);margin-top:2px;margin-bottom:16px}
+    .cwrap{position:relative;height:220px}.cwrap.tall{height:270px}
+    .cins{font-size:11px;background:var(--g5);border-left:3px solid var(--b5);padding:6px 10px;border-radius:0 var(--rsm) var(--rsm) 0;color:var(--g6);margin-top:14px;line-height:1.5}
+    .cins.warn{border-left-color:var(--or)}.cins.danger{border-left-color:var(--re)}
+    .fwrap{display:flex;flex-direction:column;gap:6px;padding:8px 0}
+    .frow{display:flex;align-items:center;gap:12px}
+    .flabel{font-size:11px;color:var(--g6);width:170px;flex-shrink:0;text-align:right}
+    .fbg{flex:1;height:30px;background:var(--g1);border-radius:4px;overflow:hidden}
+    .fbar{height:100%;border-radius:4px;display:flex;align-items:center;padding-left:10px;transition:width .6s ease}
+    .fpct{font-size:11px;font-weight:600;color:var(--w)}
+    .fabs{font-size:11px;color:var(--g6);width:80px;flex-shrink:0;font-variant-numeric:tabular-nums}
+    .tctrl{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+    .tsearch{flex:1;max-width:320px;padding:8px 12px;border:1px solid var(--g2);border-radius:var(--rsm);font-size:13px;font-family:var(--font);color:var(--g9);background:var(--w);outline:none}
+    .tsearch:focus{border-color:var(--b5)}
+    .tinfo{font-size:12px;color:var(--g4);margin-left:auto}
+    .twrap{background:var(--w);border-radius:var(--rmd);box-shadow:var(--sh);overflow:hidden}
+    table{width:100%;border-collapse:collapse;font-size:12px}
+    thead th{background:var(--b9);color:var(--w);padding:10px 14px;text-align:left;font-weight:600;font-size:11px;white-space:nowrap;cursor:pointer;user-select:none}
+    thead th:hover{background:var(--b7)}
+    tbody tr:nth-child(even){background:var(--g5)}
+    tbody tr:hover{background:var(--b1)}
+    tbody td{padding:9px 14px;color:var(--g9);border-bottom:1px solid var(--g1);font-variant-numeric:tabular-nums;white-space:nowrap}
+    .tp{font-size:11px;font-weight:600;padding:2px 7px;border-radius:4px;display:inline-block}
+    .pok{background:#D1FAE5;color:#065F46}.pwarn{background:#FEF3C7;color:#92400E}.pdanger{background:#FEE2E2;color:#991B1B}
+    .tag{font-size:11px;color:var(--g4);text-align:center;padding:32px;font-style:italic}
+    @media(max-width:1024px){.kgrid{grid-template-columns:repeat(2,1fr)}.g2col,.g3col{grid-template-columns:1fr}}
+    @media(max-width:640px){.kgrid{grid-template-columns:1fr 1fr}.wrap{padding:16px 1rem}}
+  </style>
+</head>
+<body>
+
+<header class="header">
+  <div class="hl">
+    <div class="logo">🦋</div>
+    <div><div class="ht">Dashboard SalesOps · Asaas</div><div class="hs">Funil Inbound — Pré-vendas e Vendas</div></div>
+  </div>
+  <div class="hr">
+    <span class="lu" id="lu">Dados carregados</span>
+    <button class="btn" onclick="init()">🔄 Atualizar</button>
+  </div>
+</header>
+
+<div class="tabs">
+  <button class="tab active" onclick="showTab('analise',this)">📊 Análise</button>
+  <button class="tab" onclick="showTab('tabela',this)">📋 Dados Detalhados</button>
+</div>
+
+<div id="panel-analise" class="panel active">
+  <div class="wrap">
+    <div class="stitle">Visão Geral do Funil · Totais Acumulados</div>
+    <div class="kgrid" id="kgrid"></div>
+
+    <div class="stitle">Evolução Trimestral</div>
+    <div class="g3col">
+      <div class="ccard">
+        <div class="ctitle">Reuniões cresceram. Clientes reais, não.</div>
+        <div class="csub">Médias semanais por trimestre</div>
+        <div class="cwrap tall"><canvas id="cVol"></canvas></div>
+        <div class="cins danger">📉 Volume de leads +53% mas clientes em produção ficaram estagnados — o gargalo está depois da reunião.</div>
+      </div>
+      <div class="ccard">
+        <div class="ctitle">Queda crítica pós-aprovação</div>
+        <div class="csub">Tx Produção / Proposta Aprovada</div>
+        <div class="cwrap tall"><canvas id="cProd"></canvas></div>
+        <div class="cins danger">🔴 Queda de 42pp em 6 trimestres: 93% → 51%.</div>
+      </div>
+    </div>
+
+    <div class="stitle" style="margin-top:20px">Taxas de Conversão</div>
+    <div class="g2col">
+      <div class="ccard">
+        <div class="ctitle">Taxas chave por trimestre</div>
+        <div class="csub">Reunião/Contato · Produção/Aprov · Ponta a Ponta</div>
+        <div class="cwrap"><canvas id="cTax"></canvas></div>
+        <div class="cins warn">⚠️ Reunião/Contato estável (~21%) — o SDR não é o problema. A queda está no fundo do funil.</div>
+      </div>
+      <div class="ccard">
+        <div class="ctitle">No-show por trimestre</div>
+        <div class="csub">% reuniões não realizadas após agendamento</div>
+        <div class="cwrap"><canvas id="cNos"></canvas></div>
+        <div class="cins warn">⚠️ Alta variância (6%–19%) indica critério inconsistente entre PS e Vendas.</div>
+      </div>
+    </div>
+
+    <div class="stitle" style="margin-top:20px">Funil Ponta a Ponta · Acumulado</div>
+    <div class="ccard">
+      <div class="ctitle">Conversão em cada etapa</div>
+      <div class="csub">Barras proporcionais ao total de leads recebidos</div>
+      <div class="fwrap" id="funil"></div>
+    </div>
+  </div>
+</div>
+
+<div id="panel-tabela" class="panel">
+  <div class="wrap">
+    <div class="stitle">Dados Semanais com Taxas Calculadas</div>
+    <div class="tctrl">
+      <input class="tsearch" type="text" id="busca" placeholder="🔍 Filtrar por safra ou trimestre..." oninput="filtrar()"/>
+      <span class="tinfo" id="tinfo"></span>
+    </div>
+    <div class="twrap" id="tabela"></div>
+  </div>
+</div>
+
+<script>
+// ── Dados embutidos ──────────────────────────────────
+const RAW = [{"safra":"2024-12-30","total":492,"tentativa":207,"contato":113,"reuniao_ps":31,"noshow":2,"perdido_ps":358,"reuniao_v":31,"reuniao_realizada":31,"proposta_enviada":22,"proposta_aprovada":15,"em_producao":14},{"safra":"2025-01-06","total":1475,"tentativa":998,"contato":641,"reuniao_ps":118,"noshow":21,"perdido_ps":1072,"reuniao_v":119,"reuniao_realizada":111,"proposta_enviada":92,"proposta_aprovada":57,"em_producao":54},{"safra":"2025-01-13","total":1387,"tentativa":1257,"contato":703,"reuniao_ps":152,"noshow":34,"perdido_ps":1281,"reuniao_v":154,"reuniao_realizada":131,"proposta_enviada":113,"proposta_aprovada":70,"em_producao":58},{"safra":"2025-01-20","total":1051,"tentativa":991,"contato":564,"reuniao_ps":129,"noshow":26,"perdido_ps":859,"reuniao_v":129,"reuniao_realizada":119,"proposta_enviada":91,"proposta_aprovada":70,"em_producao":63},{"safra":"2025-01-27","total":1238,"tentativa":1238,"contato":754,"reuniao_ps":146,"noshow":23,"perdido_ps":1282,"reuniao_v":148,"reuniao_realizada":132,"proposta_enviada":102,"proposta_aprovada":63,"em_producao":52},{"safra":"2025-02-03","total":1529,"tentativa":1385,"contato":838,"reuniao_ps":147,"noshow":23,"perdido_ps":1331,"reuniao_v":146,"reuniao_realizada":123,"proposta_enviada":123,"proposta_aprovada":83,"em_producao":64},{"safra":"2025-02-10","total":1419,"tentativa":1202,"contato":914,"reuniao_ps":165,"noshow":35,"perdido_ps":1153,"reuniao_v":165,"reuniao_realizada":143,"proposta_enviada":118,"proposta_aprovada":94,"em_producao":69},{"safra":"2025-02-17","total":1665,"tentativa":1112,"contato":976,"reuniao_ps":146,"noshow":33,"perdido_ps":1478,"reuniao_v":148,"reuniao_realizada":140,"proposta_enviada":107,"proposta_aprovada":79,"em_producao":72},{"safra":"2025-02-24","total":1751,"tentativa":1126,"contato":877,"reuniao_ps":129,"noshow":25,"perdido_ps":1795,"reuniao_v":131,"reuniao_realizada":111,"proposta_enviada":99,"proposta_aprovada":72,"em_producao":55},{"safra":"2025-03-03","total":936,"tentativa":861,"contato":579,"reuniao_ps":103,"noshow":28,"perdido_ps":800,"reuniao_v":105,"reuniao_realizada":80,"proposta_enviada":62,"proposta_aprovada":49,"em_producao":41},{"safra":"2025-03-10","total":1952,"tentativa":1416,"contato":1035,"reuniao_ps":192,"noshow":26,"perdido_ps":1813,"reuniao_v":192,"reuniao_realizada":165,"proposta_enviada":151,"proposta_aprovada":88,"em_producao":74},{"safra":"2025-03-17","total":1528,"tentativa":1194,"contato":930,"reuniao_ps":155,"noshow":34,"perdido_ps":1354,"reuniao_v":157,"reuniao_realizada":144,"proposta_enviada":122,"proposta_aprovada":101,"em_producao":72},{"safra":"2025-03-24","total":1440,"tentativa":1268,"contato":1001,"reuniao_ps":165,"noshow":30,"perdido_ps":1213,"reuniao_v":167,"reuniao_realizada":144,"proposta_enviada":131,"proposta_aprovada":101,"em_producao":96},{"safra":"2025-03-31","total":1509,"tentativa":1204,"contato":1046,"reuniao_ps":207,"noshow":40,"perdido_ps":1242,"reuniao_v":209,"reuniao_realizada":174,"proposta_enviada":156,"proposta_aprovada":105,"em_producao":77},{"safra":"2025-04-07","total":1403,"tentativa":1295,"contato":917,"reuniao_ps":206,"noshow":35,"perdido_ps":1233,"reuniao_v":205,"reuniao_realizada":182,"proposta_enviada":151,"proposta_aprovada":107,"em_producao":87},{"safra":"2025-04-14","total":1536,"tentativa":1179,"contato":937,"reuniao_ps":187,"noshow":31,"perdido_ps":1396,"reuniao_v":188,"reuniao_realizada":153,"proposta_enviada":135,"proposta_aprovada":95,"em_producao":71},{"safra":"2025-04-21","total":1065,"tentativa":912,"contato":669,"reuniao_ps":156,"noshow":38,"perdido_ps":979,"reuniao_v":158,"reuniao_realizada":130,"proposta_enviada":107,"proposta_aprovada":80,"em_producao":59},{"safra":"2025-04-28","total":1732,"tentativa":1013,"contato":652,"reuniao_ps":131,"noshow":31,"perdido_ps":1712,"reuniao_v":133,"reuniao_realizada":115,"proposta_enviada":107,"proposta_aprovada":65,"em_producao":58},{"safra":"2025-05-05","total":2309,"tentativa":1451,"contato":1038,"reuniao_ps":204,"noshow":51,"perdido_ps":1874,"reuniao_v":203,"reuniao_realizada":186,"proposta_enviada":149,"proposta_aprovada":117,"em_producao":83},{"safra":"2025-05-12","total":1835,"tentativa":1354,"contato":1147,"reuniao_ps":222,"noshow":41,"perdido_ps":1721,"reuniao_v":224,"reuniao_realizada":205,"proposta_enviada":165,"proposta_aprovada":113,"em_producao":90},{"safra":"2025-05-19","total":1862,"tentativa":1275,"contato":978,"reuniao_ps":216,"noshow":38,"perdido_ps":1703,"reuniao_v":215,"reuniao_realizada":182,"proposta_enviada":145,"proposta_aprovada":94,"em_producao":67},{"safra":"2025-05-26","total":1637,"tentativa":1220,"contato":963,"reuniao_ps":216,"noshow":43,"perdido_ps":1430,"reuniao_v":216,"reuniao_realizada":181,"proposta_enviada":167,"proposta_aprovada":102,"em_producao":74},{"safra":"2025-06-02","total":1902,"tentativa":1484,"contato":1083,"reuniao_ps":235,"noshow":44,"perdido_ps":1626,"reuniao_v":236,"reuniao_realizada":214,"proposta_enviada":177,"proposta_aprovada":117,"em_producao":93},{"safra":"2025-06-09","total":1802,"tentativa":1385,"contato":1103,"reuniao_ps":244,"noshow":42,"perdido_ps":1370,"reuniao_v":244,"reuniao_realizada":243,"proposta_enviada":176,"proposta_aprovada":110,"em_producao":96},{"safra":"2025-06-16","total":1413,"tentativa":1115,"contato":926,"reuniao_ps":214,"noshow":44,"perdido_ps":1258,"reuniao_v":215,"reuniao_realizada":187,"proposta_enviada":132,"proposta_aprovada":77,"em_producao":64},{"safra":"2025-06-23","total":1831,"tentativa":1461,"contato":1115,"reuniao_ps":252,"noshow":48,"perdido_ps":1753,"reuniao_v":251,"reuniao_realizada":219,"proposta_enviada":171,"proposta_aprovada":97,"em_producao":77},{"safra":"2025-06-30","total":2194,"tentativa":1528,"contato":1153,"reuniao_ps":237,"noshow":41,"perdido_ps":2024,"reuniao_v":238,"reuniao_realizada":235,"proposta_enviada":183,"proposta_aprovada":89,"em_producao":70},{"safra":"2025-07-07","total":1353,"tentativa":1326,"contato":1074,"reuniao_ps":197,"noshow":33,"perdido_ps":1178,"reuniao_v":198,"reuniao_realizada":198,"proposta_enviada":145,"proposta_aprovada":94,"em_producao":73},{"safra":"2025-07-14","total":1394,"tentativa":1330,"contato":954,"reuniao_ps":211,"noshow":27,"perdido_ps":1366,"reuniao_v":212,"reuniao_realizada":177,"proposta_enviada":138,"proposta_aprovada":99,"em_producao":75},{"safra":"2025-07-21","total":1559,"tentativa":1281,"contato":958,"reuniao_ps":211,"noshow":44,"perdido_ps":1210,"reuniao_v":211,"reuniao_realizada":201,"proposta_enviada":145,"proposta_aprovada":107,"em_producao":71},{"safra":"2025-07-28","total":1622,"tentativa":1291,"contato":1047,"reuniao_ps":243,"noshow":28,"perdido_ps":1288,"reuniao_v":243,"reuniao_realizada":215,"proposta_enviada":164,"proposta_aprovada":106,"em_producao":83},{"safra":"2025-08-04","total":1801,"tentativa":1389,"contato":1082,"reuniao_ps":195,"noshow":36,"perdido_ps":1412,"reuniao_v":195,"reuniao_realizada":170,"proposta_enviada":131,"proposta_aprovada":83,"em_producao":59},{"safra":"2025-08-11","total":1484,"tentativa":1375,"contato":959,"reuniao_ps":188,"noshow":30,"perdido_ps":1402,"reuniao_v":188,"reuniao_realizada":188,"proposta_enviada":136,"proposta_aprovada":91,"em_producao":57},{"safra":"2025-08-18","total":1529,"tentativa":1340,"contato":950,"reuniao_ps":242,"noshow":49,"perdido_ps":1283,"reuniao_v":243,"reuniao_realizada":210,"proposta_enviada":165,"proposta_aprovada":110,"em_producao":74},{"safra":"2025-08-25","total":1502,"tentativa":1211,"contato":993,"reuniao_ps":216,"noshow":37,"perdido_ps":1390,"reuniao_v":216,"reuniao_realizada":211,"proposta_enviada":143,"proposta_aprovada":106,"em_producao":86},{"safra":"2025-09-01","total":1671,"tentativa":1421,"contato":1039,"reuniao_ps":250,"noshow":37,"perdido_ps":1557,"reuniao_v":250,"reuniao_realizada":250,"proposta_enviada":180,"proposta_aprovada":107,"em_producao":78},{"safra":"2025-09-08","total":1646,"tentativa":1530,"contato":1097,"reuniao_ps":233,"noshow":36,"perdido_ps":1408,"reuniao_v":233,"reuniao_realizada":226,"proposta_enviada":155,"proposta_aprovada":119,"em_producao":96},{"safra":"2025-09-15","total":1623,"tentativa":1333,"contato":994,"reuniao_ps":225,"noshow":48,"perdido_ps":1299,"reuniao_v":224,"reuniao_realizada":224,"proposta_enviada":156,"proposta_aprovada":96,"em_producao":77},{"safra":"2025-09-22","total":1542,"tentativa":1462,"contato":951,"reuniao_ps":210,"noshow":51,"perdido_ps":1311,"reuniao_v":211,"reuniao_realizada":203,"proposta_enviada":140,"proposta_aprovada":106,"em_producao":66},{"safra":"2025-09-29","total":1860,"tentativa":1633,"contato":1170,"reuniao_ps":229,"noshow":47,"perdido_ps":1618,"reuniao_v":231,"reuniao_realizada":230,"proposta_enviada":151,"proposta_aprovada":123,"em_producao":72},{"safra":"2025-10-06","total":1838,"tentativa":1685,"contato":1087,"reuniao_ps":261,"noshow":41,"perdido_ps":1693,"reuniao_v":261,"reuniao_realizada":237,"proposta_enviada":190,"proposta_aprovada":130,"em_producao":92},{"safra":"2025-10-13","total":2002,"tentativa":1650,"contato":1139,"reuniao_ps":239,"noshow":27,"perdido_ps":1597,"reuniao_v":241,"reuniao_realizada":234,"proposta_enviada":167,"proposta_aprovada":115,"em_producao":73},{"safra":"2025-10-20","total":1859,"tentativa":1585,"contato":1147,"reuniao_ps":240,"noshow":32,"perdido_ps":1674,"reuniao_v":241,"reuniao_realizada":217,"proposta_enviada":172,"proposta_aprovada":118,"em_producao":77},{"safra":"2025-10-27","total":2099,"tentativa":1559,"contato":1148,"reuniao_ps":245,"noshow":45,"perdido_ps":1816,"reuniao_v":244,"reuniao_realizada":196,"proposta_enviada":153,"proposta_aprovada":97,"em_producao":59},{"safra":"2025-11-03","total":1865,"tentativa":1557,"contato":1032,"reuniao_ps":241,"noshow":35,"perdido_ps":1629,"reuniao_v":241,"reuniao_realizada":213,"proposta_enviada":164,"proposta_aprovada":114,"em_producao":82},{"safra":"2025-11-10","total":1879,"tentativa":1453,"contato":1137,"reuniao_ps":296,"noshow":41,"perdido_ps":1609,"reuniao_v":295,"reuniao_realizada":295,"proposta_enviada":221,"proposta_aprovada":154,"em_producao":86},{"safra":"2025-11-17","total":1561,"tentativa":1331,"contato":1029,"reuniao_ps":237,"noshow":44,"perdido_ps":1435,"reuniao_v":236,"reuniao_realizada":215,"proposta_enviada":165,"proposta_aprovada":116,"em_producao":74},{"safra":"2025-11-24","total":1754,"tentativa":1280,"contato":1093,"reuniao_ps":275,"noshow":46,"perdido_ps":1662,"reuniao_v":275,"reuniao_realizada":211,"proposta_enviada":163,"proposta_aprovada":122,"em_producao":69},{"safra":"2025-12-01","total":1809,"tentativa":1120,"contato":842,"reuniao_ps":261,"noshow":32,"perdido_ps":1606,"reuniao_v":261,"reuniao_realizada":223,"proposta_enviada":160,"proposta_aprovada":111,"em_producao":63},{"safra":"2025-12-08","total":1601,"tentativa":1069,"contato":797,"reuniao_ps":235,"noshow":39,"perdido_ps":1368,"reuniao_v":237,"reuniao_realizada":208,"proposta_enviada":165,"proposta_aprovada":98,"em_producao":82},{"safra":"2025-12-15","total":1437,"tentativa":895,"contato":652,"reuniao_ps":153,"noshow":26,"perdido_ps":1295,"reuniao_v":152,"reuniao_realizada":135,"proposta_enviada":104,"proposta_aprovada":76,"em_producao":45},{"safra":"2025-12-22","total":877,"tentativa":576,"contato":422,"reuniao_ps":113,"noshow":16,"perdido_ps":791,"reuniao_v":115,"reuniao_realizada":115,"proposta_enviada":88,"proposta_aprovada":64,"em_producao":38},{"safra":"2025-12-29","total":951,"tentativa":624,"contato":441,"reuniao_ps":124,"noshow":17,"perdido_ps":787,"reuniao_v":123,"reuniao_realizada":120,"proposta_enviada":80,"proposta_aprovada":54,"em_producao":42},{"safra":"2026-01-05","total":1892,"tentativa":1145,"contato":984,"reuniao_ps":276,"noshow":44,"perdido_ps":1659,"reuniao_v":275,"reuniao_realizada":236,"proposta_enviada":185,"proposta_aprovada":141,"em_producao":81},{"safra":"2026-01-12","total":2081,"tentativa":1388,"contato":987,"reuniao_ps":287,"noshow":40,"perdido_ps":1783,"reuniao_v":288,"reuniao_realizada":261,"proposta_enviada":192,"proposta_aprovada":153,"em_producao":87},{"safra":"2026-01-19","total":2251,"tentativa":1767,"contato":1336,"reuniao_ps":299,"noshow":54,"perdido_ps":1962,"reuniao_v":301,"reuniao_realizada":261,"proposta_enviada":209,"proposta_aprovada":126,"em_producao":76},{"safra":"2026-01-26","total":2088,"tentativa":1804,"contato":1395,"reuniao_ps":265,"noshow":34,"perdido_ps":1754,"reuniao_v":266,"reuniao_realizada":233,"proposta_enviada":196,"proposta_aprovada":139,"em_producao":95},{"safra":"2026-02-02","total":2289,"tentativa":2005,"contato":1478,"reuniao_ps":279,"noshow":44,"perdido_ps":2083,"reuniao_v":278,"reuniao_realizada":257,"proposta_enviada":176,"proposta_aprovada":133,"em_producao":94},{"safra":"2026-02-09","total":1998,"tentativa":1699,"contato":1302,"reuniao_ps":250,"noshow":38,"perdido_ps":1782,"reuniao_v":249,"reuniao_realizada":245,"proposta_enviada":147,"proposta_aprovada":128,"em_producao":71},{"safra":"2026-02-16","total":1469,"tentativa":1450,"contato":1050,"reuniao_ps":219,"noshow":38,"perdido_ps":1340,"reuniao_v":219,"reuniao_realizada":205,"proposta_enviada":138,"proposta_aprovada":110,"em_producao":70},{"safra":"2026-02-23","total":1486,"tentativa":1282,"contato":1021,"reuniao_ps":184,"noshow":27,"perdido_ps":1311,"reuniao_v":184,"reuniao_realizada":178,"proposta_enviada":121,"proposta_aprovada":88,"em_producao":42},{"safra":"2026-03-02","total":3083,"tentativa":2777,"contato":1843,"reuniao_ps":355,"noshow":64,"perdido_ps":3003,"reuniao_v":357,"reuniao_realizada":298,"proposta_enviada":226,"proposta_aprovada":165,"em_producao":114},{"safra":"2026-03-09","total":2252,"tentativa":1935,"contato":1372,"reuniao_ps":228,"noshow":51,"perdido_ps":2042,"reuniao_v":228,"reuniao_realizada":222,"proposta_enviada":149,"proposta_aprovada":111,"em_producao":59},{"safra":"2026-03-16","total":2396,"tentativa":2128,"contato":1449,"reuniao_ps":284,"noshow":52,"perdido_ps":1908,"reuniao_v":283,"reuniao_realizada":252,"proposta_enviada":172,"proposta_aprovada":139,"em_producao":65},{"safra":"2026-03-23","total":2329,"tentativa":2093,"contato":1609,"reuniao_ps":275,"noshow":43,"perdido_ps":2076,"reuniao_v":277,"reuniao_realizada":238,"proposta_enviada":171,"proposta_aprovada":135,"em_producao":69},{"safra":"2026-03-30","total":2199,"tentativa":2137,"contato":1394,"reuniao_ps":263,"noshow":55,"perdido_ps":1759,"reuniao_v":262,"reuniao_realizada":219,"proposta_enviada":135,"proposta_aprovada":110,"em_producao":82},{"safra":"2026-04-06","total":2109,"tentativa":1947,"contato":1441,"reuniao_ps":281,"noshow":45,"perdido_ps":1950,"reuniao_v":280,"reuniao_realizada":242,"proposta_enviada":161,"proposta_aprovada":117,"em_producao":68},{"safra":"2026-04-13","total":2346,"tentativa":2206,"contato":1674,"reuniao_ps":336,"noshow":54,"perdido_ps":2198,"reuniao_v":336,"reuniao_realizada":303,"proposta_enviada":238,"proposta_aprovada":161,"em_producao":100},{"safra":"2026-04-20","total":1733,"tentativa":1684,"contato":1388,"reuniao_ps":259,"noshow":42,"perdido_ps":1555,"reuniao_v":259,"reuniao_realizada":210,"proposta_enviada":173,"proposta_aprovada":100,"em_producao":71},{"safra":"2026-04-27","total":2183,"tentativa":1965,"contato":1606,"reuniao_ps":275,"noshow":50,"perdido_ps":1817,"reuniao_v":276,"reuniao_realizada":244,"proposta_enviada":157,"proposta_aprovada":90,"em_producao":60},{"safra":"2026-05-04","total":1990,"tentativa":1920,"contato":1412,"reuniao_ps":267,"noshow":62,"perdido_ps":1736,"reuniao_v":269,"reuniao_realizada":246,"proposta_enviada":133,"proposta_aprovada":86,"em_producao":68},{"safra":"2026-05-11","total":2257,"tentativa":2106,"contato":1680,"reuniao_ps":322,"noshow":77,"perdido_ps":2131,"reuniao_v":324,"reuniao_realizada":284,"proposta_enviada":212,"proposta_aprovada":135,"em_producao":74},{"safra":"2026-05-18","total":2479,"tentativa":1998,"contato":1557,"reuniao_ps":334,"noshow":56,"perdido_ps":1991,"reuniao_v":334,"reuniao_realizada":308,"proposta_enviada":172,"proposta_aprovada":114,"em_producao":59},{"safra":"2026-05-25","total":2313,"tentativa":2276,"contato":1685,"reuniao_ps":392,"noshow":77,"perdido_ps":2101,"reuniao_v":394,"reuniao_realizada":351,"proposta_enviada":202,"proposta_aprovada":127,"em_producao":44},{"safra":"2026-06-01","total":2004,"tentativa":2004,"contato":1434,"reuniao_ps":324,"noshow":69,"perdido_ps":1730,"reuniao_v":325,"reuniao_realizada":303,"proposta_enviada":155,"proposta_aprovada":110,"em_producao":35},{"safra":"2026-06-08","total":2355,"tentativa":2104,"contato":1508,"reuniao_ps":351,"noshow":52,"perdido_ps":1445,"reuniao_v":350,"reuniao_realizada":263,"proposta_enviada":142,"proposta_aprovada":104,"em_producao":14}];
+
+// ── Estado ───────────────────────────────────────────
+let dados=[], filtrados=[], charts={}, sk='', sa=false;
+
+// ── Tabs ─────────────────────────────────────────────
+function showTab(id,btn){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ── Init ─────────────────────────────────────────────
+function init(){
+  dados = RAW.map(r=>{
+    const tri = r.safra ? `${r.safra.slice(0,4)}Q${Math.ceil(parseInt(r.safra.slice(5,7))/3)}` : '';
+    return {
+      ...r, tri,
+      tx_cob:  p(r.tentativa,  r.total),
+      tx_cont: p(r.contato,    r.tentativa),
+      tx_reun: p(r.reuniao_ps, r.contato),
+      tx_nos:  p(r.noshow,     r.reuniao_ps),
+      tx_real: p(r.reuniao_realizada, r.reuniao_v),
+      tx_aprov:p(r.proposta_aprovada, r.proposta_enviada),
+      tx_prod: p(r.em_producao, r.proposta_aprovada),
+      tx_pont: p(r.em_producao, r.total),
+    };
+  });
+  filtrados=[...dados];
+  document.getElementById('lu').textContent = 'Atualizado às '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  renderTudo();
+}
+
+function p(a,b){ return b>0 ? a/b : null; }
+function s(k){ return dados.reduce((acc,r)=>acc+(r[k]||0),0); }
+
+// ── Trimestral ────────────────────────────────────────
+function porTri(){
+  const m={};
+  dados.forEach(r=>{
+    if(!r.tri) return;
+    if(!m[r.tri]) m[r.tri]={tri:r.tri,total:0,tent:0,cont:0,rps:0,nos:0,rv:0,rr:0,pe:0,pa:0,ep:0,sem:0};
+    const g=m[r.tri];
+    g.total+=r.total; g.tent+=r.tentativa; g.cont+=r.contato;
+    g.rps+=r.reuniao_ps; g.nos+=r.noshow; g.rv+=r.reuniao_v;
+    g.rr+=r.reuniao_realizada; g.pe+=r.proposta_enviada;
+    g.pa+=r.proposta_aprovada; g.ep+=r.em_producao; g.sem++;
+  });
+  return Object.values(m).sort((a,b)=>a.tri.localeCompare(b.tri)).map(g=>({
+    ...g,
+    tx_reun: p(g.rps,g.cont), tx_nos:  p(g.nos,g.rps),
+    tx_prod: p(g.ep,g.pa),    tx_pont: p(g.ep,g.total),
+    al:g.total/g.sem, ar:g.rps/g.sem, ap:g.ep/g.sem,
+  }));
+}
+
+// ── Render ────────────────────────────────────────────
+function renderTudo(){
+  const trim=porTri();
+  renderKPIs(); renderVol(trim); renderProd(trim); renderTax(trim); renderNos(trim); renderFunil(); renderTab();
+}
+
+function renderKPIs(){
+  const total=s('total'),tent=s('tentativa'),cont=s('contato'),rps=s('reuniao_ps'),
+        nos=s('noshow'),rv=s('reuniao_v'),rr=s('reuniao_realizada'),
+        pe=s('proposta_enviada'),pa=s('proposta_aprovada'),ep=s('em_producao');
+  const ks=[
+    {l:'Cobertura',        v:p(tent,total),  t:'ok',    h:'Tentativa / Total'},
+    {l:'Contato Realizado',v:p(cont,tent),   t:'ok',    h:'Contato / Tentativa'},
+    {l:'Reunião / Contato',v:p(rps,cont),    t:'warn',  h:'PS · meta >25%'},
+    {l:'No-show PS',       v:p(nos,rps),     t:'warn',  h:'Noshow / Reunião agend.'},
+    {l:'Reunião Realizada',v:p(rr,rv),       t:'ok',    h:'Realizada / Agendada V'},
+    {l:'Prop. Aprovada',   v:p(pa,pe),       t:'warn',  h:'Aprovada / Enviada'},
+    {l:'Produção / Aprov.',v:p(ep,pa),       t:'danger',h:'🔴 Em queda contínua'},
+    {l:'Ponta a Ponta',    v:p(ep,total),    t:'danger',h:'Lead → Em produção'},
+  ];
+  document.getElementById('kgrid').innerHTML=ks.map(k=>`
+    <div class="kcard ${k.t}">
+      <div class="klabel">${k.l}</div>
+      <div class="kval">${fp(k.v)}</div>
+      <span class="kbadge b${k.t}">${k.h}</span>
+    </div>`).join('');
+}
+
+const BC={responsive:true,maintainAspectRatio:false,
+  plugins:{legend:{position:'bottom',labels:{font:{family:'Inter',size:11},boxWidth:12,padding:14}}}};
+
+function mk(id,cfg){if(charts[id])charts[id].destroy();charts[id]=new Chart(document.getElementById(id),cfg);}
+
+function renderVol(t){
+  mk('cVol',{type:'bar',data:{labels:t.map(x=>x.tri),datasets:[
+    {label:'Leads/sem',data:t.map(x=>Math.round(x.al)),backgroundColor:'rgba(35,35,204,.15)',borderColor:'#2323CC',borderWidth:2,borderRadius:4},
+    {label:'Reuniões/sem',data:t.map(x=>Math.round(x.ar)),backgroundColor:'rgba(35,35,204,.55)',borderColor:'#2323CC',borderWidth:2,borderRadius:4},
+    {label:'Em produção/sem',data:t.map(x=>Math.round(x.ap)),type:'line',borderColor:'#C0392B',backgroundColor:'rgba(192,57,43,.1)',fill:true,tension:.3,pointRadius:5,pointBackgroundColor:'#C0392B',borderWidth:2.5}
+  ]},options:{...BC,scales:{y:{ticks:{font:{family:'Inter',size:10},callback:v=>fn(v)},grid:{color:'#EEF0F4'}},x:{ticks:{font:{family:'Inter',size:10}},grid:{display:false}}}}});
+}
+
+function renderProd(t){
+  mk('cProd',{type:'line',data:{labels:t.map(x=>x.tri),datasets:[
+    {label:'Produção/Aprov.',data:t.map(x=>x.tx_prod),borderColor:'#C0392B',backgroundColor:'rgba(192,57,43,.08)',fill:true,tension:.3,pointRadius:5,pointBackgroundColor:'#C0392B',borderWidth:2.5}
+  ]},options:{...BC,plugins:{...BC.plugins,legend:{display:false}},
+    scales:{y:{min:.4,max:1,ticks:{font:{family:'Inter',size:10},callback:v=>fp(v)},grid:{color:'#EEF0F4'}},x:{ticks:{font:{family:'Inter',size:10}},grid:{display:false}}}}});
+}
+
+function renderTax(t){
+  mk('cTax',{type:'line',data:{labels:t.map(x=>x.tri),datasets:[
+    {label:'Reunião/Contato',data:t.map(x=>x.tx_reun),borderColor:'#E65C00',backgroundColor:'transparent',tension:.3,pointRadius:4,borderWidth:2},
+    {label:'Produção/Aprov.',data:t.map(x=>x.tx_prod),borderColor:'#C0392B',backgroundColor:'transparent',tension:.3,pointRadius:4,borderWidth:2},
+    {label:'Ponta a Ponta',  data:t.map(x=>x.tx_pont),borderColor:'#2323CC',backgroundColor:'transparent',tension:.3,pointRadius:4,borderWidth:2}
+  ]},options:{...BC,scales:{y:{ticks:{font:{family:'Inter',size:10},callback:v=>fp(v)},grid:{color:'#EEF0F4'}},x:{ticks:{font:{family:'Inter',size:10}},grid:{display:false}}}}});
+}
+
+function renderNos(t){
+  mk('cNos',{type:'bar',data:{labels:t.map(x=>x.tri),datasets:[
+    {label:'Tx No-show',data:t.map(x=>x.tx_nos),
+     backgroundColor:t.map(x=>x.tx_nos>.20?'#C0392B':x.tx_nos>.15?'#E65C00':'#2323CC'),borderRadius:4}
+  ]},options:{...BC,plugins:{...BC.plugins,legend:{display:false}},
+    scales:{y:{ticks:{font:{family:'Inter',size:10},callback:v=>fp(v)},grid:{color:'#EEF0F4'}},x:{ticks:{font:{family:'Inter',size:10}},grid:{display:false}}}}});
+}
+
+function renderFunil(){
+  const total=s('total');
+  const et=[
+    {l:'Total recebido',   v:total,                  c:'#0F1F3D'},
+    {l:'Tentativa contato',v:s('tentativa'),          c:'#162d5e'},
+    {l:'Contato realizado',v:s('contato'),            c:'#2323CC'},
+    {l:'Reunião agendada', v:s('reuniao_ps'),         c:'#E65C00'},
+    {l:'Reunião realizada',v:s('reuniao_realizada'),  c:'#4747E0'},
+    {l:'Proposta enviada', v:s('proposta_enviada'),   c:'#2323CC'},
+    {l:'Proposta aprovada',v:s('proposta_aprovada'),  c:'#E65C00'},
+    {l:'Em produção',      v:s('em_producao'),        c:'#C0392B'},
+  ];
+  document.getElementById('funil').innerHTML=et.map(e=>{
+    const w=Math.max(4,Math.round(e.v/total*100));
+    return `<div class="frow">
+      <div class="flabel">${e.l}</div>
+      <div class="fbg"><div class="fbar" style="width:${w}%;background:${e.c}"><span class="fpct">${fp(e.v/total)}</span></div></div>
+      <div class="fabs">${fn(e.v)}</div></div>`;
+  }).join('');
+}
+
+function renderTab(){ filtrados=[...dados]; atualizarTab(); }
+
+function filtrar(){
+  const q=document.getElementById('busca').value.toLowerCase();
+  filtrados=dados.filter(r=>r.safra.includes(q)||r.tri.toLowerCase().includes(q));
+  atualizarTab();
+}
+
+function atualizarTab(){
+  document.getElementById('tinfo').textContent=`${filtrados.length} de ${dados.length} semanas`;
+  if(!filtrados.length){document.getElementById('tabela').innerHTML='<div class="tag">Sem dados para o filtro aplicado.</div>';return;}
+  const cols=[
+    {k:'safra',l:'Safra',f:v=>v},{k:'tri',l:'Trimestre',f:v=>v},
+    {k:'total',l:'Total',f:fn},{k:'tentativa',l:'Tentativa',f:fn},
+    {k:'contato',l:'Contato',f:fn},{k:'reuniao_ps',l:'Reun. PS',f:fn},
+    {k:'noshow',l:'No-show',f:fn},{k:'reuniao_realizada',l:'Reun. Real.',f:fn},
+    {k:'proposta_aprovada',l:'Prop. Aprov.',f:fn},{k:'em_producao',l:'Em Prod.',f:fn},
+    {k:'tx_reun',l:'Tx Reunião',f:v=>bg(v,.25,.15)},
+    {k:'tx_nos', l:'Tx No-show',f:v=>bg(v,.15,.20,true)},
+    {k:'tx_prod',l:'Tx Produção',f:v=>bg(v,.80,.60)},
+    {k:'tx_pont',l:'Tx Ponta',f:v=>bg(v,.05,.03)},
+  ];
+  const th=cols.map(c=>`<th onclick="sort('${c.k}')">${c.l} ↕</th>`).join('');
+  const tr=filtrados.map(r=>`<tr>${cols.map(c=>`<td>${c.f(r[c.k])}</td>`).join('')}</tr>`).join('');
+  document.getElementById('tabela').innerHTML=`<div style="overflow-x:auto"><table><thead><tr>${th}</tr></thead><tbody>${tr}</tbody></table></div>`;
+}
+
+function bg(v,ok,warn,inv=false){
+  if(v===null||v===undefined)return'—';
+  const c=!inv?(v>=ok?'pok':v>=warn?'pwarn':'pdanger'):(v<=ok?'pok':v<=warn?'pwarn':'pdanger');
+  return `<span class="tp ${c}">${fp(v)}</span>`;
+}
+
+function sort(k){
+  if(sk===k)sa=!sa;else{sk=k;sa=false;}
+  filtrados.sort((a,b)=>{const va=a[k]??0,vb=b[k]??0;return sa?va-vb:vb-va;});
+  atualizarTab();
+}
+
+function fp(v){if(v===null||v===undefined||isNaN(v))return'—';return(v*100).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})+'%';}
+function fn(v){if(v===null||v===undefined)return'—';return Number(v).toLocaleString('pt-BR');}
+
+window.onload=init;
+</script>
+</body>
+</html>
